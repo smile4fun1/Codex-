@@ -8,7 +8,7 @@ Goal: clone/download this folder and run one launcher; it bootstraps what it nee
 
 Windows (CMD):
 ```bat
-powershell -NoProfile -ExecutionPolicy Bypass -Command "iwr -useb https://raw.githubusercontent.com/smile4fun1/Codex-/main/install.ps1 | iex"
+powershell -NoProfile -ExecutionPolicy Bypass -Command "& ([scriptblock]::Create((iwr -useb 'https://raw.githubusercontent.com/smile4fun1/Codex-/main/install.ps1').Content))"
 ```
 
 macOS / Linux (bash/zsh):
