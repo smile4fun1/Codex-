@@ -9,7 +9,7 @@ Goal: clone/download this folder and run one launcher; it bootstraps what it nee
 Windows:
 - Double-click `Codex.cmd`
 
-Linux (x64) / Linux ARM (Pi):
+Linux / Raspberry Pi:
 ```bash
 cd /path/to/Codex-
 chmod +x startup/bootstrap-all.sh startup/linux-arm/*.sh startup/linux/*.sh
@@ -32,7 +32,7 @@ chmod +x startup/bootstrap-all.sh startup/macos/*.sh
 ## First run notes
 - You’ll likely need to authenticate once: `codex login` (or `./startup/bootstrap-all.sh login`).
 - Requires internet access (to download Node/Codex and to use Codex).
-- Requires `python3` on macOS/Linux (wrapper is Python).
+- Python is optional: if `python3`/`python` is present the wrapper adds extra context; if not, it still launches Codex directly via the bundled Node runtime.
 
 Fresh instance behavior:
 - By default this does **not** copy anything from `~/.codex` / `%USERPROFILE%\\.codex`.
