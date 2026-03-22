@@ -2,11 +2,14 @@
 
 Portable launcher/wrapper around the OpenAI Codex CLI.
 
-Goal: clone/download this folder and run one launcher; it bootstraps what it needs *inside the app folder* (no global installs) and then runs Codex using a portable `CODEX_HOME` stored in `.codex-portable/`.
+Goal: clone/download this folder and run one launcher; it bootstraps what it needs inside the app folder (no global installs) and then runs Codex using a portable `CODEX_HOME` rooted in the app folder itself.
 
 After install:
 - Open a new terminal and run `codex`
 - That command opens this portable instance, not a separate project copy
+- Learned Codex skills live in `skills/`
+- Codex memories live in `memories/`
+- Wrapper-internal state lives in `wrapper-skills/` and `wrapper-memory/`
 
 ## Quickstart (one-liners)
 
@@ -55,7 +58,7 @@ chmod +x startup/bootstrap-all.sh startup/macos/*.sh
 - Downloads Node.js LTS into `startup/runtime/<platform>`
 - Verifies SHA256 (`SHASUMS256.txt`)
 - Installs `@openai/codex` into that local runtime
-- Launches Codex with portable state in `.codex-portable/`
+- Launches Codex with portable state rooted in this app folder
 
 ## First run notes
 - You’ll likely need to authenticate once: `codex login` (or `./startup/bootstrap-all.sh login`).

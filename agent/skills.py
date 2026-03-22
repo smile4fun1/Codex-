@@ -25,7 +25,7 @@ class Skill:
 class SkillRegistry:
     def __init__(self, root: Path, executor: ExecutionEngine, reasoning: CodexReasoningEngine) -> None:
         self.root = root
-        self.skills_root = root / "skills"
+        self.skills_root = root / "wrapper-skills"
         self.system_dir = self.skills_root / "system"
         self.user_dir = self.skills_root / "user"
         self.registry_path = self.skills_root / "registry.json"
@@ -35,6 +35,10 @@ class SkillRegistry:
         self.skills = self._load_skills()
 
     def _ensure_registry(self) -> None:
+        legacy_skills_root = self.root / "skills"
+        if not self.skills_root.exists() and legacy_skills_root.exists() and (legacy_skills_root / "registry.json").exists():
+            legacy_skills_root.replace(self.skills_root)
+
         self.system_dir.mkdir(parents=True, exist_ok=True)
         self.user_dir.mkdir(parents=True, exist_ok=True)
         self._ensure_default_skills()

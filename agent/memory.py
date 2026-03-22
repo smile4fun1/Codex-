@@ -22,7 +22,7 @@ class TaskRecord:
 class MemoryManager:
     def __init__(self, root: Path) -> None:
         self.root = root
-        self.memory_dir = root / "memory"
+        self.memory_dir = root / "wrapper-memory"
         self.history_dir = self.memory_dir / "history"
         self.profile_path = self.memory_dir / "profile.json"
         self.tasks_path = self.memory_dir / "tasks.json"
@@ -30,6 +30,10 @@ class MemoryManager:
         self._ensure_files()
 
     def _ensure_files(self) -> None:
+        legacy_memory_dir = self.root / "memory"
+        if not self.memory_dir.exists() and legacy_memory_dir.exists() and (legacy_memory_dir / "tasks.json").exists():
+            legacy_memory_dir.replace(self.memory_dir)
+
         self.memory_dir.mkdir(parents=True, exist_ok=True)
         self.history_dir.mkdir(parents=True, exist_ok=True)
         if not self.profile_path.exists():

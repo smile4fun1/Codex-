@@ -16,7 +16,8 @@ ROOT = Path(__file__).resolve().parent
 WORKSPACE_ROOT = Path(os.environ.get("CODEX_WORKSPACE_ROOT") or str(ROOT)).resolve()
 VENV_DIR = ROOT / ".venv"
 STARTUP_DIR = ROOT / "startup"
-PORTABLE_CODEX_HOME = ROOT / ".codex-portable"
+PORTABLE_CODEX_HOME = ROOT
+LEGACY_PORTABLE_CODEX_HOME = ROOT / ".codex-portable"
 
 
 def is_admin() -> bool:
@@ -58,6 +59,8 @@ def ensure_venv() -> None:
 
 
 def ensure_portable_codex_home() -> None:
+    migrate_legacy_portable_home()
+
     PORTABLE_CODEX_HOME.mkdir(parents=True, exist_ok=True)
     for name in ["log", "memories", "rules", "sessions", "skills", "tmp"]:
         (PORTABLE_CODEX_HOME / name).mkdir(parents=True, exist_ok=True)
@@ -75,6 +78,41 @@ def ensure_portable_codex_home() -> None:
             dst_rules = PORTABLE_CODEX_HOME / "rules" / "default.rules"
             if src_rules.exists() and not dst_rules.exists():
                 dst_rules.write_bytes(src_rules.read_bytes())
+
+
+def migrate_legacy_portable_home() -> None:
+    if not LEGACY_PORTABLE_CODEX_HOME.exists():
+        return
+
+    for name in ["log", "memories", "rules", "sessions", "skills", "tmp"]:
+        src_dir = LEGACY_PORTABLE_CODEX_HOME / name
+        dst_dir = PORTABLE_CODEX_HOME / name
+        if src_dir.exists():
+            shutil.copytree(src_dir, dst_dir, dirs_exist_ok=True)
+
+    for pattern in [
+        "auth.json",
+        "config.toml",
+        "version.json",
+        "models_cache.json",
+        "history.jsonl",
+        "cap_sid",
+        ".personality_migration",
+        "sandbox.log",
+        "logs_*.sqlite*",
+        "state_*.sqlite*",
+    ]:
+        for src in LEGACY_PORTABLE_CODEX_HOME.glob(pattern):
+            dst = PORTABLE_CODEX_HOME / src.name
+            if not dst.exists():
+                if src.is_file():
+                    shutil.copy2(src, dst)
+
+    for name in [".sandbox", ".sandbox-bin"]:
+        src_dir = LEGACY_PORTABLE_CODEX_HOME / name
+        dst_dir = PORTABLE_CODEX_HOME / name
+        if src_dir.exists() and not dst_dir.exists():
+            shutil.copytree(src_dir, dst_dir, dirs_exist_ok=True)
 
 
 def split_wrapper_args(argv: list[str]) -> tuple[bool, list[str]]:

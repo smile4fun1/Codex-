@@ -23,8 +23,8 @@ class AugmentationLayer:
     def __init__(self, app_root: Path, workspace_root: Path) -> None:
         self.app_root = app_root
         self.workspace_root = workspace_root
-        self.memory_dir = app_root / "memory"
-        self.skills_dir = app_root / "skills"
+        self.memory_dir = app_root / "wrapper-memory"
+        self.skills_dir = app_root / "wrapper-skills"
         self.agents_path = workspace_root / "AGENTS.md"
         self.profile_path = self.memory_dir / "profile.json"
         self.tasks_path = self.memory_dir / "tasks.json"
@@ -45,6 +45,13 @@ class AugmentationLayer:
         return content
 
     def _ensure_files(self) -> None:
+        legacy_memory_dir = self.app_root / "memory"
+        legacy_skills_dir = self.app_root / "skills"
+        if not self.memory_dir.exists() and legacy_memory_dir.exists() and (legacy_memory_dir / "tasks.json").exists():
+            legacy_memory_dir.replace(self.memory_dir)
+        if not self.skills_dir.exists() and legacy_skills_dir.exists() and (legacy_skills_dir / "registry.json").exists():
+            legacy_skills_dir.replace(self.skills_dir)
+
         self.memory_dir.mkdir(parents=True, exist_ok=True)
         self.history_dir.mkdir(parents=True, exist_ok=True)
         self.skills_dir.mkdir(parents=True, exist_ok=True)
