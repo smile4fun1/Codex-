@@ -4,6 +4,18 @@ Portable launcher/wrapper around the OpenAI Codex CLI.
 
 Goal: clone/download this folder and run one launcher; it bootstraps what it needs *inside the app folder* (no global installs) and then runs Codex using a portable `CODEX_HOME` stored in `.codex-portable/`.
 
+## Quickstart (one-liners)
+
+Windows (CMD):
+```bat
+powershell -NoProfile -ExecutionPolicy Bypass -Command "$repo='smile4fun1/Codex-'; $dest=\"$env:USERPROFILE\\Codex-\"; $zip=\"$env:TEMP\\codex-portable.zip\"; $tmp=\"$env:TEMP\\codex-portable\"; Remove-Item -Recurse -Force $tmp -ErrorAction SilentlyContinue; Invoke-WebRequest -UseBasicParsing \"https://github.com/$repo/archive/refs/heads/main.zip\" -OutFile $zip; Expand-Archive -Force $zip $tmp; $dir=(Get-ChildItem $tmp -Directory | Select-Object -First 1).FullName; if(Test-Path $dest){Remove-Item -Recurse -Force $dest}; Move-Item $dir $dest; & \"$dest\\Codex.cmd\""
+```
+
+macOS / Linux (bash/zsh):
+```bash
+mkdir -p ~/Codex- && cd ~/Codex- && curl -fsSL https://github.com/smile4fun1/Codex-/archive/refs/heads/main.tar.gz | tar -xz --strip-components=1 && chmod +x startup/bootstrap-all.sh startup/linux-arm/*.sh startup/linux/*.sh startup/macos/*.sh 2>/dev/null || true && ./startup/bootstrap-all.sh
+```
+
 ## Launch (one-click)
 
 Recommended (GitHub Releases):
