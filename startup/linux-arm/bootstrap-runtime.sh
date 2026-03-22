@@ -48,18 +48,11 @@ ensure_node() {
 
   echo "[Codex] Detecting latest Node.js LTS for Linux ARM..."
   local ver
-  ver="$(python3 - <<'PY'
-import json, ssl, sys, urllib.request
-url="https://nodejs.org/dist/index.json"
-with urllib.request.urlopen(url, context=ssl.create_default_context(), timeout=20) as r:
-    data=json.load(r)
-for item in data:
-    if item.get("lts"):
-        sys.stdout.write(item["version"])
-        raise SystemExit(0)
-raise SystemExit("No LTS version found in index.json")
-PY
-)"
+  ver="$(download "https://nodejs.org/dist/index.json" "${tmp}/index.json" && grep -m1 '"lts":"' "${tmp}/index.json" | sed -E 's/.*"version":"([^"]+)".*/\1/')"
+  if [[ -z "$ver" ]]; then
+    echo "[Codex] Could not determine latest Node.js LTS version." >&2
+    exit 1
+  fi
 
   local tarball="node-${ver}-${dist_arch}.tar.gz"
   local base="https://nodejs.org/dist/${ver}"

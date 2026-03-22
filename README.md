@@ -21,6 +21,10 @@ macOS / Linux (bash/zsh):
 curl -fsSL https://raw.githubusercontent.com/smile4fun1/Codex-/main/install.sh | bash
 ```
 
+Note:
+- Windows installer is tested.
+- macOS/Linux path is patched for executable bits and Python-free bootstrap, but not yet runtime-tested on a real Mac from this environment.
+
 ## Launch (one-click)
 
 Recommended (GitHub Releases):

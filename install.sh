@@ -10,6 +10,6 @@ cd "$DIR"
 
 curl -fsSL "$REPO_URL" | tar -xz --strip-components=1
 chmod +x startup/bootstrap-all.sh startup/linux-arm/*.sh startup/linux/*.sh startup/macos/*.sh 2>/dev/null || true
+chmod +x startup/macos/*.command 2>/dev/null || true
 
 ./startup/bootstrap-all.sh
-
