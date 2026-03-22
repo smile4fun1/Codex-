@@ -15,13 +15,14 @@ Invoke-WebRequest -UseBasicParsing $zipUrl -OutFile $zip
 
 Write-Host "[Codex] Extracting..."
 Expand-Archive -Force $zip $tmp
-$dir = (Get-ChildItem $tmp -Directory | Select-Object -First 1).FullName
-if (-not (Test-Path -LiteralPath $dir)) {
-    throw "Expanded archive folder not found: $dir"
+$sourceDir = (Get-ChildItem $tmp -Directory | Select-Object -First 1).FullName
+if (-not (Test-Path -LiteralPath $sourceDir)) {
+    throw "Expanded archive folder not found: $sourceDir"
 }
 
 if (Test-Path -LiteralPath $Dir) { Remove-Item -Recurse -Force $Dir }
-Move-Item -LiteralPath $dir -Destination $Dir
+New-Item -ItemType Directory -Force -Path $Dir | Out-Null
+Copy-Item -Recurse -Force (Join-Path $sourceDir '*') $Dir
 
 Write-Host "[Codex] Launching..."
-& (Join-Path $Dir "Codex.cmd")
+Start-Process -FilePath (Join-Path $Dir "Codex.cmd") -WorkingDirectory $Dir
