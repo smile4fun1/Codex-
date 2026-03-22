@@ -1,4 +1,42 @@
 {
-  "updated_at": "2026-03-22T20:52:00",
-  "skills": []
+  "updated_at": "2026-03-22T21:32:13",
+  "skills": [
+    {
+      "skill_id": "desktop-control",
+      "path": "skills\\desktop-control",
+      "name": "desktop-control",
+      "description": "Control the local desktop on Windows with keyboard, mouse, and screenshots. Use when Codex needs to inspect the current screen, move or click the mouse, type text, send hotkeys, scroll, or capture screenshots to see what is happening on the user's PC.",
+      "version": 1,
+      "enabled": true,
+      "inputs": [
+        "request"
+      ],
+      "tags": [
+        "desktop-control",
+        "control",
+        "the",
+        "local",
+        "desktop",
+        "windows",
+        "with",
+        "keyboard"
+      ],
+      "keywords": [
+        "desktop-control",
+        "control",
+        "the",
+        "local",
+        "desktop",
+        "windows",
+        "with",
+        "keyboard",
+        "mouse",
+        "and",
+        "screenshots",
+        "use"
+      ],
+      "content_hash": "31a31c06f1876662a69631845c3203b70e74523ebffd5f4c045470f831f0b2b9",
+      "issues": []
+    }
+  ]
 }

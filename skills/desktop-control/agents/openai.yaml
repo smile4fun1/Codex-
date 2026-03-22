@@ -1,0 +1,4 @@
+version: 1
+display_name: Desktop Control
+short_description: Control the local Windows desktop with screenshots, keyboard, and mouse actions.
+default_prompt: Inspect the current screen or control the local desktop with safe keyboard and mouse actions.

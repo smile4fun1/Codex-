@@ -31,6 +31,8 @@ skills/_write_test.txt
 skills/*
 !skills/.gitkeep
 !skills/index.json
+!skills/desktop-control/
+!skills/desktop-control/**
 memories/*
 !memories/.gitkeep
 wrapper-memory/execution-log.jsonl
