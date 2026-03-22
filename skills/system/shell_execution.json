@@ -1,0 +1,28 @@
+{
+  "skill_id": "shell_execution",
+  "name": "Shell Execution",
+  "description": "Execute shell commands with structured safety checks.",
+  "inputs": [
+    "command",
+    "cwd"
+  ],
+  "tags": [
+    "shell",
+    "command",
+    "process"
+  ],
+  "keywords": [
+    "run",
+    "execute",
+    "shell",
+    "command",
+    "powershell",
+    "cmd"
+  ],
+  "logic": {
+    "type": "builtin",
+    "handler": "shell_execution"
+  },
+  "enabled": true,
+  "version": 1
+}

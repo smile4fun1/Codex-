@@ -1,0 +1,26 @@
+{
+  "skill_id": "system_inspection",
+  "name": "System Inspection",
+  "description": "Inspect the OS, tools, environment, repo context, and execution capability.",
+  "inputs": [
+    "scope"
+  ],
+  "tags": [
+    "system",
+    "status",
+    "environment"
+  ],
+  "keywords": [
+    "inspect",
+    "system",
+    "status",
+    "capabilities",
+    "environment"
+  ],
+  "logic": {
+    "type": "builtin",
+    "handler": "system_inspection"
+  },
+  "enabled": true,
+  "version": 1
+}

@@ -1,0 +1,26 @@
+{
+  "skill_id": "code_generation",
+  "name": "Code Generation",
+  "description": "Generate or update source files based on explicit instructions.",
+  "inputs": [
+    "path",
+    "instruction"
+  ],
+  "tags": [
+    "code",
+    "generate",
+    "scaffold"
+  ],
+  "keywords": [
+    "generate",
+    "create code",
+    "scaffold",
+    "write code"
+  ],
+  "logic": {
+    "type": "builtin",
+    "handler": "code_generation"
+  },
+  "enabled": true,
+  "version": 1
+}

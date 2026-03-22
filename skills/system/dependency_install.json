@@ -1,0 +1,28 @@
+{
+  "skill_id": "dependency_install",
+  "name": "Dependency Install",
+  "description": "Install project or system dependencies through supported package managers.",
+  "inputs": [
+    "package",
+    "manager"
+  ],
+  "tags": [
+    "install",
+    "dependency",
+    "package"
+  ],
+  "keywords": [
+    "install",
+    "dependency",
+    "package",
+    "pip",
+    "winget",
+    "npm"
+  ],
+  "logic": {
+    "type": "builtin",
+    "handler": "dependency_install"
+  },
+  "enabled": true,
+  "version": 1
+}

@@ -1,0 +1,31 @@
+{
+  "skill_id": "structured_breakdown",
+  "name": "Structured Breakdown",
+  "description": "Produce a concise structured breakdown for planning, strategy, checklist, and approach requests.",
+  "inputs": [
+    "prompt"
+  ],
+  "tags": [
+    "reasoning",
+    "planning",
+    "analysis"
+  ],
+  "keywords": [
+    "checklist",
+    "plan",
+    "strategy",
+    "approach",
+    "breakdown"
+  ],
+  "logic": {
+    "type": "virtual",
+    "steps": [
+      "Identify the user objective.",
+      "Break the problem into concise sections.",
+      "Prioritize risks, sequence, and next actions.",
+      "Respond directly without forcing system execution."
+    ]
+  },
+  "enabled": true,
+  "version": 1
+}

@@ -1,0 +1,26 @@
+{
+  "skill_id": "project_analysis",
+  "name": "Project Analysis",
+  "description": "Inspect a repository or directory and summarize its structure and signals.",
+  "inputs": [
+    "path"
+  ],
+  "tags": [
+    "project",
+    "repo",
+    "analysis"
+  ],
+  "keywords": [
+    "project",
+    "repo",
+    "analyze",
+    "analysis",
+    "codebase"
+  ],
+  "logic": {
+    "type": "builtin",
+    "handler": "project_analysis"
+  },
+  "enabled": true,
+  "version": 1
+}

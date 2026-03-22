@@ -1,0 +1,13 @@
+{
+  "system": [
+    "code_generation.json",
+    "dependency_install.json",
+    "file_ops.json",
+    "project_analysis.json",
+    "shell_execution.json",
+    "system_inspection.json"
+  ],
+  "user": [
+    "structured_breakdown.json"
+  ]
+}

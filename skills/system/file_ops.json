@@ -1,0 +1,30 @@
+{
+  "skill_id": "file_ops",
+  "name": "File Operations",
+  "description": "Read, write, inspect, and organize files safely.",
+  "inputs": [
+    "path",
+    "mode",
+    "content"
+  ],
+  "tags": [
+    "files",
+    "filesystem",
+    "read",
+    "write"
+  ],
+  "keywords": [
+    "file",
+    "read",
+    "write",
+    "folder",
+    "directory",
+    "save"
+  ],
+  "logic": {
+    "type": "builtin",
+    "handler": "file_ops"
+  },
+  "enabled": true,
+  "version": 1
+}
