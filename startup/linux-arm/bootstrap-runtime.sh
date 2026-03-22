@@ -4,6 +4,7 @@ ROOT="$(cd "$(dirname "$0")/../.." && pwd)"
 
 RUNTIME_DIR="$ROOT/startup/runtime/linux-arm"
 CODEX_ENTRY="$RUNTIME_DIR/node_modules/@openai/codex/bin/codex.js"
+RUNTIME_VERSION="$RUNTIME_DIR/runtime-version.json"
 
 download() {
   local url="$1"
@@ -91,3 +92,8 @@ fi
 
 echo "[Codex] Installing @openai/codex into app runtime..."
 PATH="$RUNTIME_DIR/bin:$PATH" "$RUNTIME_DIR/bin/npm" --prefix "$RUNTIME_DIR" install --no-audit --no-fund @openai/codex
+CODEX_VERSION="$(PATH="$RUNTIME_DIR/bin:$PATH" "$RUNTIME_DIR/bin/node" -p "require('$RUNTIME_DIR/node_modules/@openai/codex/package.json').version")"
+printf '{\n  "platform": "linux-arm",\n  "node_version": "%s",\n  "codex_version": "%s",\n  "installed_at": "%s"\n}\n' \
+  "$("$RUNTIME_DIR/bin/node" -p "process.version")" \
+  "$CODEX_VERSION" \
+  "$(date -u +"%Y-%m-%dT%H:%M:%SZ")" > "$RUNTIME_VERSION"

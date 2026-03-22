@@ -7,7 +7,6 @@ __pycache__/
 startup/runtime/
 
 logs/
-memories/
 sessions/
 rules/
 tmp/
@@ -29,5 +28,14 @@ state_*.sqlite-shm
 state_*.sqlite-wal
 skills/.system/
 skills/_write_test.txt
+skills/*
+!skills/.gitkeep
+!skills/index.json
+memories/*
+!memories/.gitkeep
+wrapper-memory/execution-log.jsonl
+wrapper-memory/history/
+wrapper-memory/loop_state.json
+.personality_migration
 
 dist/

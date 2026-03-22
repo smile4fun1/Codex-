@@ -6,10 +6,14 @@ import platform
 import shutil
 import subprocess
 import sys
+import time
+import tomllib
 import venv
 from pathlib import Path
 
 from agent.augmentation import AugmentationLayer
+from agent.memory import MemoryManager
+from wrapper.skills import UserSkillIndex
 
 
 ROOT = Path(__file__).resolve().parent
@@ -78,6 +82,8 @@ def ensure_portable_codex_home() -> None:
             dst_rules = PORTABLE_CODEX_HOME / "rules" / "default.rules"
             if src_rules.exists() and not dst_rules.exists():
                 dst_rules.write_bytes(src_rules.read_bytes())
+    MemoryManager(ROOT)
+    UserSkillIndex(ROOT).build()
 
 
 def migrate_legacy_portable_home() -> None:
@@ -148,6 +154,18 @@ def build_codex_command(args: list[str]) -> list[str]:
         insert_at = command.index("exec") + 1
         command.insert(insert_at, "--skip-git-repo-check")
     return command
+
+
+def handle_wrapper_command(args: list[str]) -> int | None:
+    if not args:
+        return None
+    if args[0] not in {"/skills-clean", "skills-clean"}:
+        return None
+    result = UserSkillIndex(ROOT).clean()
+    print(f"skills cleaned: {result['total']}")
+    for item in result["cleaned"]:
+        print(f"- {item['skill_id']}: {', '.join(item['issues'])}")
+    return 0
 
 
 def resolve_codex_runtime() -> list[str]:
@@ -250,10 +268,84 @@ def detect_unix_runtime_name() -> str:
     return "linux"
 
 
+def load_wrapper_config() -> dict:
+    config_path = ROOT / "config.toml"
+    if not config_path.exists():
+        return {}
+    with config_path.open("rb") as handle:
+        return tomllib.load(handle)
+
+
+def load_loop_interval() -> int:
+    wrapper = load_wrapper_config().get("wrapper", {})
+    if isinstance(wrapper, dict):
+        return int(wrapper.get("heartbeat_interval", 60) or 60)
+    return 60
+
+
+def should_start_heartbeat_loop() -> bool:
+    if os.environ.get("CODEX_WRAPPER_LOOP_ACTIVE") == "1":
+        return False
+    try:
+        tasks_path = ROOT / "wrapper-memory" / "tasks.json"
+        if not tasks_path.exists():
+            return False
+        import json
+
+        payload = json.loads(tasks_path.read_text(encoding="utf-8"))
+        tasks = payload.get("tasks", [])
+        return any(task.get("enabled", True) for task in tasks if isinstance(task, dict))
+    except Exception:
+        return False
+
+
+def heartbeat_loop_running(interval: int) -> bool:
+    try:
+        import json
+
+        state_path = ROOT / "wrapper-memory" / "loop_state.json"
+        if not state_path.exists():
+            return False
+        payload = json.loads(state_path.read_text(encoding="utf-8"))
+        last_heartbeat = payload.get("last_heartbeat")
+        if not last_heartbeat:
+            return False
+        from datetime import datetime
+
+        age = time.time() - datetime.fromisoformat(last_heartbeat).timestamp()
+        return age < max(interval * 2, 120)
+    except Exception:
+        return False
+
+
+def maybe_start_heartbeat_loop() -> None:
+    if not should_start_heartbeat_loop():
+        return
+    interval = load_loop_interval()
+    if heartbeat_loop_running(interval):
+        return
+    command = [sys.executable, str(ROOT / "wrapper" / "loop.py"), "--interval", str(interval)]
+    kwargs: dict[str, object] = {
+        "cwd": str(ROOT),
+        "stdin": subprocess.DEVNULL,
+        "stdout": subprocess.DEVNULL,
+        "stderr": subprocess.DEVNULL,
+        "env": {**os.environ, "CODEX_WRAPPER_LOOP_ACTIVE": "1"},
+    }
+    if os.name == "nt":
+        kwargs["creationflags"] = subprocess.CREATE_NO_WINDOW | subprocess.DETACHED_PROCESS
+    else:
+        kwargs["start_new_session"] = True
+    subprocess.Popen(command, **kwargs)
+
+
 def main() -> int:
     ensure_venv()
     ensure_portable_codex_home()
     skip_elevation, forwarded = split_wrapper_args(sys.argv[1:])
+    wrapper_result = handle_wrapper_command(forwarded)
+    if wrapper_result is not None:
+        return wrapper_result
 
     if os.name == "nt" and not skip_elevation and relaunch_as_admin(forwarded):
         print("Relaunched as admin.")
@@ -262,6 +354,7 @@ def main() -> int:
     prompt = infer_prompt(forwarded)
     augmentation = AugmentationLayer(ROOT, WORKSPACE_ROOT)
     augmentation.refresh_agents_file(prompt)
+    maybe_start_heartbeat_loop()
 
     command = build_codex_command(forwarded)
     env = os.environ.copy()

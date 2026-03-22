@@ -31,7 +31,7 @@ class CodexWrapperAgent:
         print("Codex ready. Commands: /memory /skills /status /improve /exit")
         while True:
             try:
-                user_input = input("codex> ").strip()
+                user_input = input("george> ").strip()
             except (EOFError, KeyboardInterrupt):
                 print("\nExiting.")
                 return
@@ -92,8 +92,7 @@ class CodexWrapperAgent:
 
     def _handle_command(self, command: str) -> str:
         if command == "/memory":
-            tasks = self.memory.load_tasks().get("tasks", [])[-5:]
-            return json.dumps(tasks, indent=2)
+            return json.dumps(self.memory.load_context()[-5:], indent=2)
         if command == "/skills":
             payload = [
                 {
@@ -111,7 +110,8 @@ class CodexWrapperAgent:
                 "agent": self.profile.get("user_preferences", {}).get("assistant_identity", "Codex"),
                 "cwd": os.getcwd(),
                 "admin": self._is_admin(),
-                "memory_tasks": len(self.memory.load_tasks().get("tasks", [])),
+                "memory_entries": len(self.memory.load_context()),
+                "scheduled_tasks": len(self.memory.load_tasks().get("tasks", [])),
                 "skills": len(self.skills.skills),
             }
             return json.dumps(status, indent=2)
@@ -138,7 +138,7 @@ class CodexWrapperAgent:
         if lowered in {"hi", "hello", "hey"} or lowered.startswith("hello ") or lowered.startswith("hi ") or lowered.startswith("hey "):
             return "Hi."
         if "who are you" in lowered:
-            return "Codex (portable wrapper)."
+            return "Codex. George's local build."
         if "what can you do" in lowered or "capabilities" in lowered:
             return (
                 "I can reason through problems, inspect the system, work with files, run commands, install dependencies, analyze projects, generate code, and turn repeated work into reusable skills."
@@ -194,7 +194,7 @@ class CodexWrapperAgent:
             tags=tags[:8],
             summary=self.memory.summarize(prompt, outcome, tags[:4]),
         )
-        self.memory.save_task(record)
+        self.memory.save_task_result(record, source="interactive")
 
     @staticmethod
     def _confirm(message: str) -> bool:
@@ -209,4 +209,4 @@ class CodexWrapperAgent:
             return False
 
 
-CodexAgent = CodexWrapperAgent
+GeorgeAgent = CodexWrapperAgent

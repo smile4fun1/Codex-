@@ -4,12 +4,55 @@ Portable launcher/wrapper around the OpenAI Codex CLI.
 
 Goal: clone/download this folder and run one launcher; it bootstraps what it needs inside the app folder (no global installs) and then runs Codex using a portable `CODEX_HOME` rooted in the app folder itself.
 
+This public repo ships with empty `skills/` and `memories/` templates only. Real user skills, memories, auth, sessions, and logs stay local and out of git.
+
 After install:
 - Open a new terminal and run `codex`
 - That command opens this portable instance, not a separate project copy
 - Learned Codex skills live in `skills/`
 - Codex memories live in `memories/`
 - Wrapper-internal state lives in `wrapper-skills/` and `wrapper-memory/`
+- `codex /skills-clean` validates the user skill tree and disables duplicate/low-value skills
+
+## Storage rules
+
+- `memories/` is the source of truth for user knowledge only: preferences, learned facts, and compressed relevant context
+- `wrapper-memory/` is system state only: scheduled tasks, heartbeat state, execution logs, and internal loop history
+- `skills/` is the user-facing Codex skill tree
+- `wrapper-skills/` is wrapper metadata and built-in helper registry
+
+## Scheduled tasks
+
+- Scheduled tasks live in `wrapper-memory/tasks.json`
+- Supported schedules:
+  - `interval:60`
+  - `daily:08:00`
+- Task results are written to `wrapper-memory/history/` and `wrapper-memory/execution-log.jsonl`
+- If any enabled task exists, the launcher starts a silent heartbeat loop automatically
+
+Task shape:
+
+```json
+{
+  "id": "unique_id",
+  "type": "check",
+  "schedule": "interval:60",
+  "prompt": "instruction passed to Codex",
+  "last_run": null,
+  "enabled": true
+}
+```
+
+## Telegram notifications
+
+Optional in `config.toml`:
+
+```toml
+telegram_token = "123456:token"
+chat_id = "123456789"
+```
+
+If omitted, task output stays in CLI logs only.
 
 ## Quickstart (one-liners)
 
@@ -58,6 +101,7 @@ chmod +x startup/bootstrap-all.sh startup/macos/*.sh
 - Downloads Node.js LTS into `startup/runtime/<platform>`
 - Verifies SHA256 (`SHASUMS256.txt`)
 - Installs `@openai/codex` into that local runtime
+- Writes `startup/runtime/<platform>/runtime-version.json`
 - Launches Codex with portable state rooted in this app folder
 
 ## First run notes

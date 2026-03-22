@@ -4,6 +4,7 @@ $root = Resolve-Path (Join-Path $PSScriptRoot "..\..")
 $runtimeDir = Join-Path $root "startup\runtime\windows"
 $codexEntry = Join-Path $runtimeDir "node_modules\@openai\codex\bin\codex.js"
 $nodeExe = Join-Path $runtimeDir "node.exe"
+$runtimeVersionPath = Join-Path $runtimeDir "runtime-version.json"
 
 if ((Test-Path $nodeExe) -and (Test-Path $codexEntry)) {
     Write-Host "[Codex] Windows runtime already present."
@@ -61,9 +62,19 @@ try {
 
     Write-Host "[Codex] Installing @openai/codex into app runtime..."
     & $npm --prefix $runtimeDir install --no-audit --no-fund @openai/codex
+    $codexPackage = Join-Path $runtimeDir "node_modules\@openai\codex\package.json"
+    $codexVersion = ""
+    if (Test-Path $codexPackage) {
+        $codexVersion = (Get-Content $codexPackage -Raw | ConvertFrom-Json).version
+    }
+    @{
+        platform = "windows"
+        node_version = $ver
+        codex_version = $codexVersion
+        installed_at = (Get-Date).ToString("o")
+    } | ConvertTo-Json | Set-Content -Encoding UTF8 $runtimeVersionPath
     exit $LASTEXITCODE
 }
 finally {
     Remove-Item -Recurse -Force $tmp.FullName -ErrorAction SilentlyContinue
 }
-
