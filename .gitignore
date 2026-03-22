@@ -8,3 +8,5 @@ startup/runtime/
 
 logs/
 memory/
+
+dist/

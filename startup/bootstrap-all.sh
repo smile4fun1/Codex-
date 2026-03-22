@@ -1,6 +1,9 @@
 #!/usr/bin/env bash
 set -euo pipefail
 ROOT="$(cd "$(dirname "$0")/.." && pwd)"
+if [[ -x "$ROOT/Codex" ]]; then
+  exec "$ROOT/Codex" "$@"
+fi
 OS="$(uname -s | tr '[:upper:]' '[:lower:]')"
 ARCH="$(uname -m | tr '[:upper:]' '[:lower:]')"
 

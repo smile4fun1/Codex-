@@ -6,6 +6,9 @@ Goal: clone/download this folder and run one launcher; it bootstraps what it nee
 
 ## Launch (one-click)
 
+Recommended (GitHub Releases):
+- Download the asset for your OS/CPU and run `Codex` / `Codex.exe` from the extracted folder.
+
 Windows:
 - Double-click `Codex.cmd`
 
