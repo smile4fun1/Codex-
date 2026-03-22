@@ -4,6 +4,10 @@ Portable launcher/wrapper around the OpenAI Codex CLI.
 
 Goal: clone/download this folder and run one launcher; it bootstraps what it needs *inside the app folder* (no global installs) and then runs Codex using a portable `CODEX_HOME` stored in `.codex-portable/`.
 
+After install:
+- Open a new terminal and run `codex`
+- That command opens this portable instance, not a separate project copy
+
 ## Quickstart (one-liners)
 
 Windows (CMD):
