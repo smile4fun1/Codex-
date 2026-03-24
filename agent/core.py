@@ -13,6 +13,7 @@ from .reasoning import CodexReasoningEngine
 from .safety import SafetyLayer
 from .self_improve import SelfImprover
 from .skills import SkillRegistry
+from wrapper.environment import detect_runtime_profile, render_environment_status
 
 
 class CodexWrapperAgent:
@@ -132,11 +133,13 @@ class CodexWrapperAgent:
     def _respond_conversationally(self, prompt: str, memory_hits: list[dict[str, str]]) -> str:
         lowered = prompt.lower().strip()
         if lowered == "yo":
-            return "yo, what's up"
+            environment = detect_runtime_profile(self.root, self.root)
+            return f"Codex online. {render_environment_status(environment)}"
         if lowered == "what":
             return "Say what you want done and I’ll take it from there."
         if lowered in {"hi", "hello", "hey"} or lowered.startswith("hello ") or lowered.startswith("hi ") or lowered.startswith("hey "):
-            return "Hi."
+            environment = detect_runtime_profile(self.root, self.root)
+            return f"Codex online. {render_environment_status(environment)}"
         if "who are you" in lowered:
             return "Codex. George's local build."
         if "what can you do" in lowered or "capabilities" in lowered:

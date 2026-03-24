@@ -2,7 +2,6 @@ from __future__ import annotations
 
 import ctypes
 import os
-import platform
 import shutil
 import subprocess
 import sys
@@ -11,8 +10,9 @@ import tomllib
 import venv
 from pathlib import Path
 
-from agent.augmentation import AugmentationLayer
+from agent.augmentation_layer import AugmentationLayer
 from agent.memory import MemoryManager
+from wrapper.environment import detect_runtime_profile
 from wrapper.skills import UserSkillIndex
 from wrapper.git_persistence import GitPersistence
 
@@ -174,18 +174,75 @@ def resolve_codex_runtime() -> list[str]:
     if bundled:
         return bundled
 
+    system_runtime = resolve_system_codex()
+    if system_runtime:
+        return system_runtime
+
+    bootstrapped = try_bootstrap_runtime()
+    if bootstrapped:
+        return bootstrapped
+
+    raise FileNotFoundError(
+        "No Codex runtime found. Install Node.js + npm or run the startup launcher for this platform to bootstrap the local runtime."
+    )
+
+
+def resolve_bundled_runtime() -> list[str] | None:
+    runtime_dir = get_runtime_dir()
+    entry = runtime_dir / "node_modules" / "@openai" / "codex" / "bin" / "codex.js"
+    if not entry.exists():
+        return None
+    if os.name == "nt":
+        node = runtime_dir / "node.exe"
+        if node.exists():
+            return [str(node), str(entry)]
+        return None
+    node = runtime_dir / "bin" / "node"
+    if node.exists():
+        return [str(node), str(entry)]
+    system_node = shutil.which("node")
+    if system_node:
+        return [system_node, str(entry)]
+    return None
+
+
+def try_bootstrap_runtime() -> list[str] | None:
+    if os.name == "nt":
+        node = subprocess.run(["where.exe", "node"], capture_output=True, text=True, check=False)
+        npm = subprocess.run(["where.exe", "npm.cmd"], capture_output=True, text=True, check=False)
+        if node.returncode != 0 or npm.returncode != 0:
+            return None
+        runtime_dir = get_runtime_dir()
+        runtime_dir.mkdir(parents=True, exist_ok=True)
+        subprocess.run(
+            ["npm.cmd", "install", "@openai/codex", "--prefix", str(runtime_dir)],
+            cwd=str(ROOT),
+            check=False,
+        )
+        return resolve_bundled_runtime()
+    runtime_dir = get_runtime_dir()
+    runtime_dir.mkdir(parents=True, exist_ok=True)
+    node = subprocess.run(["bash", "-lc", "command -v node"], capture_output=True, text=True, check=False)
+    npm = subprocess.run(["bash", "-lc", "command -v npm"], capture_output=True, text=True, check=False)
+    if node.returncode != 0 or npm.returncode != 0:
+        return None
+    subprocess.run(
+        ["bash", "-lc", f"npm install @openai/codex --prefix '{runtime_dir}'"],
+        cwd=str(ROOT),
+        check=False,
+    )
+    return resolve_bundled_runtime()
+
+
+def get_runtime_dir() -> Path:
+    environment = detect_runtime_profile(ROOT, WORKSPACE_ROOT)
+    return STARTUP_DIR / "runtime" / str(environment["runtime_name"])
+
+
+def resolve_system_codex() -> list[str] | None:
     if os.name != "nt":
         system = shutil.which("codex")
-        if system:
-            return [system]
-
-        bootstrapped = try_bootstrap_runtime()
-        if bootstrapped:
-            return bootstrapped
-
-        raise FileNotFoundError(
-            "No Codex runtime found. Install Node.js + npm and run startup/bootstrap-all.sh to bootstrap this machine."
-        )
+        return [system] if system else None
 
     appdata = os.environ.get("APPDATA", "")
     preferred = Path(appdata) / "npm" / "codex.cmd"
@@ -202,71 +259,7 @@ def resolve_codex_runtime() -> list[str]:
     matches = [match for match in matches if Path(match).resolve() != (ROOT / "Codex.cmd").resolve()]
     if matches:
         return [matches[0]]
-
-    bootstrapped = try_bootstrap_runtime()
-    if bootstrapped:
-        return bootstrapped
-
-    raise FileNotFoundError("No Codex runtime found. Run startup scripts in the startup folder to bootstrap this machine.")
-
-
-def resolve_bundled_runtime() -> list[str] | None:
-    if os.name == "nt":
-        node = STARTUP_DIR / "runtime" / "windows" / "node.exe"
-        entry = STARTUP_DIR / "runtime" / "windows" / "node_modules" / "@openai" / "codex" / "bin" / "codex.js"
-        if node.exists() and entry.exists():
-            return [str(node), str(entry)]
-    else:
-        runtime_name = detect_unix_runtime_name()
-        runtime_dir = STARTUP_DIR / "runtime" / runtime_name
-        entry = runtime_dir / "node_modules" / "@openai" / "codex" / "bin" / "codex.js"
-        if entry.exists():
-            node = runtime_dir / "bin" / "node"
-            if node.exists():
-                return [str(node), str(entry)]
-            system_node = shutil.which("node")
-            if system_node:
-                return [system_node, str(entry)]
     return None
-
-
-def try_bootstrap_runtime() -> list[str] | None:
-    if os.name == "nt":
-        node = subprocess.run(["where.exe", "node"], capture_output=True, text=True, check=False)
-        npm = subprocess.run(["where.exe", "npm.cmd"], capture_output=True, text=True, check=False)
-        if node.returncode != 0 or npm.returncode != 0:
-            return None
-        runtime_dir = STARTUP_DIR / "runtime" / "windows"
-        runtime_dir.mkdir(parents=True, exist_ok=True)
-        subprocess.run(
-            ["npm.cmd", "install", "@openai/codex", "--prefix", str(runtime_dir)],
-            cwd=str(ROOT),
-            check=False,
-        )
-        return resolve_bundled_runtime()
-    runtime_name = detect_unix_runtime_name()
-    runtime_dir = STARTUP_DIR / "runtime" / runtime_name
-    runtime_dir.mkdir(parents=True, exist_ok=True)
-    node = subprocess.run(["bash", "-lc", "command -v node"], capture_output=True, text=True, check=False)
-    npm = subprocess.run(["bash", "-lc", "command -v npm"], capture_output=True, text=True, check=False)
-    if node.returncode != 0 or npm.returncode != 0:
-        return None
-    subprocess.run(
-        ["bash", "-lc", f"npm install @openai/codex --prefix '{runtime_dir}'"],
-        cwd=str(ROOT),
-        check=False,
-    )
-    return resolve_bundled_runtime()
-
-
-def detect_unix_runtime_name() -> str:
-    system = platform.system().lower()
-    machine = platform.machine().lower()
-    if system == "darwin":
-        return "macos"
-    if "arm" in machine or "aarch64" in machine:
-        return "linux-arm"
-    return "linux"
 
 
 def load_wrapper_config() -> dict:

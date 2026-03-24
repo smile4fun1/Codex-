@@ -2,9 +2,13 @@
 
 Portable launcher/wrapper around the OpenAI Codex CLI.
 
-Goal: clone/download this folder and run one launcher; it bootstraps what it needs inside the app folder (no global installs) and then runs Codex using a portable `CODEX_HOME` rooted in the app folder itself.
+Goal: clone/download this folder and run one launcher; it bootstraps what it needs inside the app folder and then runs Codex using a portable `CODEX_HOME` rooted in the app folder itself.
 
-This public repo ships with empty `skills/` and `memories/` templates only. Real user skills, memories, auth, sessions, and logs stay local and out of git.
+This is the clean public repo. It ships with empty `skills/` and `memories/` templates only. Real user skills, memories, auth, sessions, and logs stay local and out of git unless the user intentionally versions them in their own repo.
+
+Repo split:
+- `smile4fun1/Codex-` is the clean public starter for friends and fresh installs.
+- `smile4fun1/Codex` is the personal/stateful repo for your own carried memory, skills, and wrapper state.
 
 If the app lives inside a Git repo and `git` is available, the wrapper can auto-commit tracked memory and user-skill changes back into that repo. If that repo has a reachable remote, the wrapper also tries to push those memory/skill updates so the repo can act as a cloud-backed memory store. In this public repo, the default ignore rules keep live user data out of version control.
 
@@ -60,6 +64,8 @@ If omitted, task output stays in CLI logs only.
 
 ## Quickstart (one-liners)
 
+Clean public installer:
+
 Windows (CMD):
 ```bat
 curl.exe -L https://raw.githubusercontent.com/smile4fun1/Codex-/main/install.ps1 -o "%TEMP%\codex-install.ps1" && powershell -NoProfile -ExecutionPolicy Bypass -File "%TEMP%\codex-install.ps1"
@@ -75,14 +81,14 @@ macOS / Linux (bash/zsh):
 curl -fsSL https://raw.githubusercontent.com/smile4fun1/Codex-/main/install.sh | bash
 ```
 
-Note:
-- Windows installer is tested.
-- macOS/Linux path is patched for executable bits and Python-free bootstrap, but not yet runtime-tested on a real Mac from this environment.
+Recommended user model:
+- install this clean repo
+- use it locally as-is, or put it inside your own Git repo if you want your own portable memory/versioned state
 
 ## Launch (one-click)
 
 Recommended (GitHub Releases):
-- Download the asset for your OS/CPU and run `Codex` / `Codex.exe` from the extracted folder.
+- Download the asset for your OS/CPU and run `Codex` / `Codex.exe` from the extracted folder when a packaged release exists.
 
 Windows:
 - Double-click `Windows-Startup.cmd`
@@ -110,12 +116,24 @@ chmod +x macOS-Startup.command startup/macos/*.command
 - Writes `startup/runtime/<platform>/runtime-version.json`
 - Launches Codex with portable state rooted in this app folder
 
+## Environment detection
+
+- On wake, the wrapper inspects the machine immediately and injects the current workspace, OS, CPU architecture, admin/root state, repo presence, detected tools, and runtime mode into `AGENTS.md`.
+- Greeting behavior is environment-aware: an initial `hi`/`hello`/`yo` answers with a short status line instead of a generic greeting.
+- Runtime selection is automatic:
+  - Windows -> `startup/runtime/windows`
+  - macOS -> `startup/runtime/macos`
+  - Linux x64 -> `startup/runtime/linux`
+  - Linux ARM -> `startup/runtime/linux-arm`
+- Fallback order is: bundled runtime, then system `codex`, then local bootstrap when possible.
+
 ## First run notes
 - You’ll likely need to authenticate once: `codex login` (or `./startup/bootstrap-all.sh login`).
 - Requires internet access (to download Node/Codex and to use Codex).
 - Python is optional: if `python3`/`python` is present the wrapper adds extra context; if not, it still launches Codex directly via the bundled Node runtime.
 - The clear manual launchers are `Windows-Startup.cmd`, `Linux-Startup.sh`, and `macOS-Startup.command`. The `startup/` folder contains the internal platform scripts they call.
 - While Codex is open, the wrapper checkpoints session memory on a timer so a UI/window crash does not lose the whole conversation between launch and exit.
+- The public repo keeps default ignore rules aimed at keeping live user data local unless the user intentionally changes that setup.
 
 Fresh instance behavior:
 - By default this does **not** copy anything from `~/.codex` / `%USERPROFILE%\\.codex`.

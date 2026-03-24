@@ -8,6 +8,7 @@ What this folder does:
 - falls back to a system Codex install if available
 - can bootstrap a local runtime when `node` and `npm` exist
 - uses an app-local portable Codex home so auth/config/sessions can travel with the drive
+- picks the runtime target from the detected OS and CPU architecture immediately on launch
 
 Windows today:
 - `..\Windows-Startup.cmd`
@@ -31,8 +32,12 @@ Bundled runtime:
 - `runtime\macos`, `runtime\linux`, and `runtime\linux-arm` are bootstrap targets for local installs on those systems
 
 Notes:
-- The Windows bundle is ready now.
-- On macOS/Linux/Linux ARM, the startup scripts will try bundled runtime first, then system `codex`, then local bootstrap via `npm` if `node` and `npm` are available.
+- Runtime target selection is:
+  - Windows -> `runtime\windows`
+  - macOS -> `runtime\macos`
+  - Linux x64 -> `runtime\linux`
+  - Linux ARM -> `runtime\linux-arm`
+- On every platform, the startup scripts try bundled runtime first, then system `codex`, then local bootstrap via `npm` if `node` and `npm` are available.
 - The wrapper stores memory, profile, and skill data in the app folder, but launches Codex from the detected system root.
 - Portable Codex state lives at the app root itself. A legacy `.codex-portable` tree is migrated forward on launch if present.
 - If the app root is a Git repo and `git` is available, tracked memory and user-skill changes are auto-committed there after runs. In this public repo, ignore rules keep live user data local by default.
