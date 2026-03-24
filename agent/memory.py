@@ -126,6 +126,7 @@ class MemoryManager:
             }
         )
         payload["entries"] = entries[-200:]
+        payload["updated_at"] = datetime.now().isoformat(timespec="seconds")
         self._write_json(self.context_path, payload)
         self._rewrite_knowledge(payload["entries"])
 
@@ -173,6 +174,7 @@ class MemoryManager:
             updated_files[key] = current_meta
 
         state["files"] = updated_files
+        state["updated_at"] = datetime.now().isoformat(timespec="seconds")
         self._write_system_json(self.session_state_path, state)
         return ingested
 
@@ -262,7 +264,13 @@ class MemoryManager:
     def _rewrite_knowledge(self, entries: list[dict[str, Any]]) -> None:
         lines = ["# Knowledge", ""]
         for entry in entries[-40:]:
-            lines.append(f"- {entry.get('summary', '').strip()} [tags: {', '.join(entry.get('tags', [])[:5])}]")
+            timestamp = str(entry.get("timestamp", "")).strip()
+            source = str(entry.get("source", "")).strip()
+            prefix = f"{timestamp} | " if timestamp else ""
+            suffix = f" | source: {source}" if source else ""
+            lines.append(
+                f"- {prefix}{entry.get('summary', '').strip()} [tags: {', '.join(entry.get('tags', [])[:5])}{suffix}]"
+            )
         self.knowledge_path.write_text("\n".join(lines) + "\n", encoding="utf-8")
 
     def _prune_context(self) -> None:

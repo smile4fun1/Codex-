@@ -6,7 +6,7 @@ Goal: clone/download this folder and run one launcher; it bootstraps what it nee
 
 This public repo ships with empty `skills/` and `memories/` templates only. Real user skills, memories, auth, sessions, and logs stay local and out of git.
 
-If the app lives inside a Git repo and `git` is available, the wrapper can auto-commit tracked memory and user-skill changes back into that repo. In this public repo, the default ignore rules keep live user data out of version control.
+If the app lives inside a Git repo and `git` is available, the wrapper can auto-commit tracked memory and user-skill changes back into that repo. If that repo has a reachable remote, the wrapper also tries to push those memory/skill updates so the repo can act as a cloud-backed memory store. In this public repo, the default ignore rules keep live user data out of version control.
 
 After install:
 - Open a new terminal and run `codex`
@@ -22,7 +22,8 @@ After install:
 - `wrapper-memory/` is system state only: scheduled tasks, heartbeat state, execution logs, and internal loop history
 - `skills/` is the user-facing Codex skill tree
 - `wrapper-skills/` is wrapper metadata and built-in helper registry
-- If `memories/`, tracked `skills/`, or `wrapper-memory/tasks.json` are versioned in a Git repo, the wrapper auto-commits changes there after runs and scheduled-task updates
+- Memory entries carry timestamps locally, and `knowledge.md` is rewritten from that timestamped memory index
+- If `memories/`, tracked `skills/`, or `wrapper-memory/tasks.json` are versioned in a Git repo, the wrapper auto-commits changes there after runs and scheduled-task updates, and will try to push them if a remote repo is configured
 
 ## Scheduled tasks
 
@@ -114,6 +115,7 @@ chmod +x macOS-Startup.command startup/macos/*.command
 - Requires internet access (to download Node/Codex and to use Codex).
 - Python is optional: if `python3`/`python` is present the wrapper adds extra context; if not, it still launches Codex directly via the bundled Node runtime.
 - The clear manual launchers are `Windows-Startup.cmd`, `Linux-Startup.sh`, and `macOS-Startup.command`. The `startup/` folder contains the internal platform scripts they call.
+- While Codex is open, the wrapper checkpoints session memory on a timer so a UI/window crash does not lose the whole conversation between launch and exit.
 
 Fresh instance behavior:
 - By default this does **not** copy anything from `~/.codex` / `%USERPROFILE%\\.codex`.

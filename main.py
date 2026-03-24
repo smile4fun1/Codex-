@@ -284,6 +284,13 @@ def load_loop_interval() -> int:
     return 60
 
 
+def load_memory_sync_interval() -> int:
+    wrapper = load_wrapper_config().get("wrapper", {})
+    if isinstance(wrapper, dict):
+        return max(int(wrapper.get("memory_sync_interval", 15) or 15), 5)
+    return 15
+
+
 def should_start_heartbeat_loop() -> bool:
     if os.environ.get("CODEX_WRAPPER_LOOP_ACTIVE") == "1":
         return False
@@ -340,6 +347,29 @@ def maybe_start_heartbeat_loop() -> None:
     subprocess.Popen(command, **kwargs)
 
 
+def run_codex_with_live_persistence(
+    command: list[str],
+    env: dict[str, str],
+    memory: MemoryManager,
+    git_persistence: GitPersistence,
+    sessions_root: Path,
+) -> int:
+    sync_interval = load_memory_sync_interval()
+    proc = subprocess.Popen(command, cwd=str(WORKSPACE_ROOT), env=env)
+
+    while True:
+        try:
+            returncode = proc.wait(timeout=sync_interval)
+            break
+        except subprocess.TimeoutExpired:
+            memory.ingest_codex_sessions(sessions_root)
+            git_persistence.sync("live memory checkpoint")
+
+    memory.ingest_codex_sessions(sessions_root)
+    git_persistence.sync("memories and skills")
+    return returncode
+
+
 def main() -> int:
     ensure_venv()
     ensure_portable_codex_home()
@@ -366,10 +396,7 @@ def main() -> int:
     env = os.environ.copy()
     env["CODEX_HOME"] = str(PORTABLE_CODEX_HOME)
     env["HOME"] = str(PORTABLE_CODEX_HOME)
-    proc = subprocess.run(command, cwd=str(WORKSPACE_ROOT), env=env, check=False)
-    memory.ingest_codex_sessions(sessions_root)
-    git_persistence.sync("memories and skills")
-    return proc.returncode
+    return run_codex_with_live_persistence(command, env, memory, git_persistence, sessions_root)
 
 
 if __name__ == "__main__":
