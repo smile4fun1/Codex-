@@ -22,6 +22,7 @@ cd "$DIR"
 
 curl -fsSL "$REPO_URL" | tar -xz --strip-components=1
 chmod +x codex 2>/dev/null || true
+chmod +x Linux-Startup.sh macOS-Startup.command 2>/dev/null || true
 chmod +x startup/bootstrap-all.sh startup/linux-arm/*.sh startup/linux/*.sh startup/macos/*.sh 2>/dev/null || true
 chmod +x startup/macos/*.command 2>/dev/null || true
 
@@ -44,4 +45,8 @@ case ":${PATH}:" in
     ;;
 esac
 
-./startup/bootstrap-all.sh
+if [[ "$(uname -s)" == "Darwin" ]]; then
+  ./macOS-Startup.command
+else
+  ./Linux-Startup.sh
+fi

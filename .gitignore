@@ -38,6 +38,7 @@ memories/*
 wrapper-memory/execution-log.jsonl
 wrapper-memory/history/
 wrapper-memory/loop_state.json
+wrapper-memory/session-ingest-state.json
 .personality_migration
 
 dist/

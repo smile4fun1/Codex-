@@ -1,6 +1,7 @@
 from __future__ import annotations
 
 import json
+import re
 from dataclasses import asdict, dataclass
 from datetime import datetime
 from pathlib import Path
@@ -31,6 +32,7 @@ class MemoryManager:
         self.tasks_path = self.system_memory_dir / "tasks.json"
         self.loop_state_path = self.system_memory_dir / "loop_state.json"
         self.execution_log_path = self.system_memory_dir / "execution-log.jsonl"
+        self.session_state_path = self.system_memory_dir / "session-ingest-state.json"
         self._ensure_files()
 
     def _ensure_files(self) -> None:
@@ -63,6 +65,8 @@ class MemoryManager:
             self._write_json(self.tasks_path, {"tasks": []})
         if not self.loop_state_path.exists():
             self._write_json(self.loop_state_path, {"last_heartbeat": None, "pid": None})
+        if not self.session_state_path.exists():
+            self._write_json(self.session_state_path, {"files": {}})
         if not self.knowledge_path.exists():
             self.knowledge_path.write_text(
                 "# Knowledge\n\n- Prefer concise plans, explicit risks, and confirmed execution for impactful actions.\n",
@@ -143,6 +147,34 @@ class MemoryManager:
                 scored.append((score, item))
         scored.sort(key=lambda pair: pair[0], reverse=True)
         return [item for _, item in scored[:limit]]
+
+    def ingest_codex_sessions(self, sessions_root: Path) -> int:
+        if not sessions_root.exists():
+            return 0
+
+        state = self._read_json(self.session_state_path, {"files": {}})
+        known_files = state.setdefault("files", {})
+        updated_files: dict[str, dict[str, Any]] = {}
+        ingested = 0
+
+        for path in sorted(sessions_root.rglob("*.jsonl")):
+            try:
+                stat = path.stat()
+            except OSError:
+                continue
+
+            key = str(path.resolve())
+            current_meta = {"size": stat.st_size, "mtime_ns": stat.st_mtime_ns}
+            if known_files.get(key) == current_meta:
+                updated_files[key] = current_meta
+                continue
+
+            ingested += self._ingest_session_file(path)
+            updated_files[key] = current_meta
+
+        state["files"] = updated_files
+        self._write_system_json(self.session_state_path, state)
+        return ingested
 
     def compress_history_if_needed(self, max_entries: int = 200, keep_recent: int = 120) -> None:
         records = self._load_history_records()
@@ -289,3 +321,77 @@ class MemoryManager:
         if path.parent != self.system_memory_dir:
             raise ValueError(f"System state write blocked outside wrapper-memory: {path}")
         self._write_json(path, payload)
+
+    def _ingest_session_file(self, path: Path) -> int:
+        ingested = 0
+        current_user: str | None = None
+
+        for line in path.read_text(encoding="utf-8", errors="replace").splitlines():
+            try:
+                payload = json.loads(line)
+            except json.JSONDecodeError:
+                continue
+
+            user_message = self._extract_user_message(payload)
+            if user_message:
+                current_user = user_message
+                continue
+
+            assistant_message = self._extract_final_answer(payload)
+            if not assistant_message or not current_user:
+                continue
+
+            summary = self.summarize(current_user, assistant_message, ["codex-session"])
+            if self._is_high_signal_summary(summary):
+                tags = self._derive_session_tags(current_user, assistant_message)
+                self.remember_context(summary, tags, source=f"codex-session:{path.name}")
+                ingested += 1
+            current_user = None
+
+        return ingested
+
+    @staticmethod
+    def _extract_user_message(payload: dict[str, Any]) -> str | None:
+        if payload.get("type") == "event_msg":
+            event = payload.get("payload", {})
+            if event.get("type") == "user_message":
+                return str(event.get("message", "")).strip() or None
+
+        if payload.get("type") == "response_item":
+            item = payload.get("payload", {})
+            if item.get("type") != "message" or item.get("role") != "user":
+                return None
+            texts = [
+                str(part.get("text", "")).strip()
+                for part in item.get("content", [])
+                if isinstance(part, dict) and part.get("type") == "input_text" and str(part.get("text", "")).strip()
+            ]
+            return "\n".join(texts).strip() or None
+        return None
+
+    @staticmethod
+    def _extract_final_answer(payload: dict[str, Any]) -> str | None:
+        if payload.get("type") != "response_item":
+            return None
+        item = payload.get("payload", {})
+        if item.get("type") != "message" or item.get("role") != "assistant":
+            return None
+        if item.get("phase") != "final_answer":
+            return None
+        texts = [
+            str(part.get("text", "")).strip()
+            for part in item.get("content", [])
+            if isinstance(part, dict) and part.get("type") == "output_text" and str(part.get("text", "")).strip()
+        ]
+        return "\n".join(texts).strip() or None
+
+    @staticmethod
+    def _derive_session_tags(prompt: str, outcome: str) -> list[str]:
+        tokens = re.findall(r"[a-z0-9][a-z0-9_-]{2,}", f"{prompt} {outcome}".lower())
+        tags = ["codex-session"]
+        for token in tokens:
+            if token not in tags:
+                tags.append(token)
+            if len(tags) >= 8:
+                break
+        return tags

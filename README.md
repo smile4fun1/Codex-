@@ -6,6 +6,8 @@ Goal: clone/download this folder and run one launcher; it bootstraps what it nee
 
 This public repo ships with empty `skills/` and `memories/` templates only. Real user skills, memories, auth, sessions, and logs stay local and out of git.
 
+If the app lives inside a Git repo and `git` is available, the wrapper can auto-commit tracked memory and user-skill changes back into that repo. In this public repo, the default ignore rules keep live user data out of version control.
+
 After install:
 - Open a new terminal and run `codex`
 - That command opens this portable instance, not a separate project copy
@@ -20,6 +22,7 @@ After install:
 - `wrapper-memory/` is system state only: scheduled tasks, heartbeat state, execution logs, and internal loop history
 - `skills/` is the user-facing Codex skill tree
 - `wrapper-skills/` is wrapper metadata and built-in helper registry
+- If `memories/`, tracked `skills/`, or `wrapper-memory/tasks.json` are versioned in a Git repo, the wrapper auto-commits changes there after runs and scheduled-task updates
 
 ## Scheduled tasks
 
@@ -81,20 +84,22 @@ Recommended (GitHub Releases):
 - Download the asset for your OS/CPU and run `Codex` / `Codex.exe` from the extracted folder.
 
 Windows:
-- Double-click `Codex.cmd`
+- Double-click `Windows-Startup.cmd`
 
 Linux / Raspberry Pi:
 ```bash
 cd /path/to/Codex-
 chmod +x startup/bootstrap-all.sh startup/linux-arm/*.sh startup/linux/*.sh
-./startup/bootstrap-all.sh
+chmod +x Linux-Startup.sh
+./Linux-Startup.sh
 ```
 
 macOS:
 ```bash
 cd /path/to/Codex-
 chmod +x startup/bootstrap-all.sh startup/macos/*.sh
-./startup/bootstrap-all.sh
+chmod +x macOS-Startup.command startup/macos/*.command
+./macOS-Startup.command
 ```
 
 ## What bootstrap does
@@ -108,6 +113,7 @@ chmod +x startup/bootstrap-all.sh startup/macos/*.sh
 - You’ll likely need to authenticate once: `codex login` (or `./startup/bootstrap-all.sh login`).
 - Requires internet access (to download Node/Codex and to use Codex).
 - Python is optional: if `python3`/`python` is present the wrapper adds extra context; if not, it still launches Codex directly via the bundled Node runtime.
+- The clear manual launchers are `Windows-Startup.cmd`, `Linux-Startup.sh`, and `macOS-Startup.command`. The `startup/` folder contains the internal platform scripts they call.
 
 Fresh instance behavior:
 - By default this does **not** copy anything from `~/.codex` / `%USERPROFILE%\\.codex`.

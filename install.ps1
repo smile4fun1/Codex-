@@ -50,4 +50,4 @@ else {
 }
 
 Write-Host "[Codex] Launching..."
-Start-Process -FilePath (Join-Path $Dir "Codex.cmd") -WorkingDirectory $Dir
+Start-Process -FilePath (Join-Path $Dir "Windows-Startup.cmd") -WorkingDirectory $Dir

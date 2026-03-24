@@ -9,7 +9,7 @@ if [[ ! -f "$CODEX_ENTRY" ]]; then
   "$ROOT/startup/linux/bootstrap-runtime.sh"
 fi
 
-PORTABLE_HOME="$ROOT/.codex-portable"
+PORTABLE_HOME="$ROOT"
 mkdir -p "$PORTABLE_HOME"/{log,memories,rules,sessions,skills,tmp}
 
 if command -v python3 >/dev/null 2>&1; then

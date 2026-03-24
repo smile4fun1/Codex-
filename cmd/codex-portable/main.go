@@ -39,7 +39,7 @@ func main() {
 		os.Exit(1)
 	}
 
-	portableHome := filepath.Join(root, ".codex-portable")
+	portableHome := root
 	if err := ensurePortableHome(portableHome); err != nil {
 		fmt.Fprintln(os.Stderr, err)
 		os.Exit(1)

@@ -15,6 +15,7 @@ if str(ROOT) not in sys.path:
     sys.path.insert(0, str(ROOT))
 
 from agent.memory import MemoryManager, TaskRecord
+from wrapper.git_persistence import GitPersistence
 from wrapper.notifications import TelegramNotifier
 
 
@@ -94,6 +95,7 @@ def execute_task(root: Path, task: dict[str, object], notifier: TelegramNotifier
 
 def run_once(root: Path) -> int:
     manager = MemoryManager(root)
+    git_persistence = GitPersistence(root)
     payload = manager.load_tasks()
     tasks = payload.get("tasks", [])
     notifier = get_notifier(root)
@@ -108,6 +110,7 @@ def run_once(root: Path) -> int:
         changed = True
     if changed:
         manager.save_tasks(tasks)
+        git_persistence.sync("scheduled tasks")
     return 0
 
 

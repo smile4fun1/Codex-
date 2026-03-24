@@ -14,6 +14,7 @@ from pathlib import Path
 from agent.augmentation import AugmentationLayer
 from agent.memory import MemoryManager
 from wrapper.skills import UserSkillIndex
+from wrapper.git_persistence import GitPersistence
 
 
 ROOT = Path(__file__).resolve().parent
@@ -342,15 +343,20 @@ def maybe_start_heartbeat_loop() -> None:
 def main() -> int:
     ensure_venv()
     ensure_portable_codex_home()
+    memory = MemoryManager(ROOT)
+    git_persistence = GitPersistence(ROOT)
     skip_elevation, forwarded = split_wrapper_args(sys.argv[1:])
     wrapper_result = handle_wrapper_command(forwarded)
     if wrapper_result is not None:
+        git_persistence.sync("wrapper cleanup")
         return wrapper_result
 
     if os.name == "nt" and not skip_elevation and relaunch_as_admin(forwarded):
         print("Relaunched as admin.")
         return 0
 
+    sessions_root = PORTABLE_CODEX_HOME / "sessions"
+    memory.ingest_codex_sessions(sessions_root)
     prompt = infer_prompt(forwarded)
     augmentation = AugmentationLayer(ROOT, WORKSPACE_ROOT)
     augmentation.refresh_agents_file(prompt)
@@ -361,6 +367,8 @@ def main() -> int:
     env["CODEX_HOME"] = str(PORTABLE_CODEX_HOME)
     env["HOME"] = str(PORTABLE_CODEX_HOME)
     proc = subprocess.run(command, cwd=str(WORKSPACE_ROOT), env=env, check=False)
+    memory.ingest_codex_sessions(sessions_root)
+    git_persistence.sync("memories and skills")
     return proc.returncode
 
 

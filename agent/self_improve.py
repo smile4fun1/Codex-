@@ -13,6 +13,7 @@ class SelfImprover:
         self.root = root
         self.skills = skills
         self.log_path = root / "logs" / "self_improve.log"
+        self.log_path.parent.mkdir(parents=True, exist_ok=True)
 
     def review(self, prompt: str, selected_skills: list[str], success: bool, outcome: str) -> list[str]:
         notes: list[str] = []

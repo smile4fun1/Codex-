@@ -4,6 +4,7 @@ $root = Split-Path -Parent $MyInvocation.MyCommand.Path
 $exe = Join-Path $root "Codex.exe"
 $venvPython = Join-Path $root ".venv\Scripts\python.exe"
 $main = Join-Path $root "main.py"
+$startup = Join-Path $root "Windows-Startup.cmd"
 
 if (Test-Path $exe) {
     & $exe @args
@@ -12,13 +13,7 @@ if (Test-Path $exe) {
 
 Push-Location $root
 try {
-    if (Test-Path $venvPython) {
-        & $venvPython $main @args
-    }
-    else {
-        Write-Host "[Codex] Virtual environment not found. Bootstrapping wrapper with system Python..."
-        & python $main @args
-    }
+    & $startup @args
 }
 finally {
     Pop-Location
